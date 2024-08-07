@@ -3,8 +3,12 @@ from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import BookListSerializer, BookSearchSerializer
+from rest_framework.permissions import IsAuthenticated
+
+
 class BookListView(ListCreateAPIView):
     serializer_class=BookListSerializer
+    permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
         book_name = request.data.get('book_name')
         
@@ -41,6 +45,7 @@ class BookListView(ListCreateAPIView):
 
 class BookSearchView(ListCreateAPIView):
     serializer_class = BookSearchSerializer
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         keywords = request.data.get('keywords')
