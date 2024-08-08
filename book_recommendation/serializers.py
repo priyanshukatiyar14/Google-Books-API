@@ -13,3 +13,8 @@ class UserInteractionSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         return UserInteraction.objects.create(**validated_data)
+    
+class UserInteractionPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserInteraction
+        fields=['book_id','liked','comment']

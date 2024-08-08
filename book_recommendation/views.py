@@ -1,7 +1,7 @@
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import BookRecommendationSerializer, UserInteractionSerializer
+from .serializers import BookRecommendationSerializer, UserInteractionPostSerializer
 from . models import BookRecommendation, UserInteraction
 from .utils import decode_access_token
 from user.models import Users
@@ -69,7 +69,7 @@ class BookRecommendationModifyAPIViews(RetrieveUpdateDestroyAPIView):
     
     
 class UserInteractionAPIViews(ListCreateAPIView):
-    serializer_class = UserInteractionSerializer
+    serializer_class = UserInteractionPostSerializer
     queryset=UserInteraction.objects.all()
     permission_classes = [IsAuthenticated]
 

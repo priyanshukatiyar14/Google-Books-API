@@ -1,5 +1,5 @@
 from . models import Users
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, CreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import UserSerializer, UserLoginSerializer
@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
 
-class UserView(ListCreateAPIView):
+class UserView(CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
@@ -23,7 +23,7 @@ class UserView(ListCreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-class UserLoginView(ListCreateAPIView):
+class UserLoginView(CreateAPIView):
     serializer_class = UserLoginSerializer
     permission_classes = [AllowAny]
 

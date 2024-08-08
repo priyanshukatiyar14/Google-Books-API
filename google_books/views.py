@@ -1,12 +1,12 @@
 import requests, os
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import BookListSerializer, BookSearchSerializer
 from rest_framework.permissions import IsAuthenticated
 
 
-class BookListView(ListCreateAPIView):
+class BookListView(CreateAPIView):
     serializer_class=BookListSerializer
     permission_classes = [IsAuthenticated]
     def post(self, request, *args, **kwargs):
@@ -43,7 +43,7 @@ class BookListView(ListCreateAPIView):
         
         return Response(books, status=status.HTTP_200_OK)
 
-class BookSearchView(ListCreateAPIView):
+class BookSearchView(CreateAPIView):
     serializer_class = BookSearchSerializer
     permission_classes = [IsAuthenticated]
 
