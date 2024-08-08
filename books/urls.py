@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('user.urls')),
     path('google_books/', include('google_books.urls')),
+    path('book/', include('book_recommendation.urls')),
 ]

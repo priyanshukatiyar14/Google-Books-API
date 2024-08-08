@@ -3,12 +3,13 @@ from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import UserSerializer, UserLoginSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
 
 class UserView(ListCreateAPIView):
     serializer_class = UserSerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         return Users.objects.all()
@@ -18,11 +19,13 @@ class UserView(ListCreateAPIView):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            serializer.data.pop('password')
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class UserLoginView(ListCreateAPIView):
     serializer_class = UserLoginSerializer
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         try:
