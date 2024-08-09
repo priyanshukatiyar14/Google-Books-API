@@ -435,12 +435,13 @@ This endpoint allows users to update or delete a specific book recommendation by
 
 #### Example Request:
 
-```json
 PUT /recommend/123e4567-e89b-12d3-a456-426614174000/
+
+```json
 {
-    "title": "1984",
-    "author": "George Orwell",
-    "rating": 4.9
+  "title": "1984",
+  "author": "George Orwell",
+  "rating": 4.9
 }
 ```
 
