@@ -5,9 +5,9 @@
 
 - Prerequisites:
   Ensure the following tools are installed on your system:
-  **Python 3.8+**
-  **pip** (Python package manager)
-  **virtualenv** (optional but recommended)
+  **Python 3.8+**,
+  **pip** (Python package manager),
+  **virtualenv** (optional but recommended),
   **Git** (to clone the repository)
 
 - Getting Started
