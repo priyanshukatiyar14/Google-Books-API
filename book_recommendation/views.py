@@ -2,21 +2,21 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import BookRecommendationSerializer, UserInteractionPostSerializer
-from . models import BookRecommendation, UserInteraction
-from .utils import decode_access_token
-from user.models import Users
+from .utils import get_user_from_token
 from rest_framework.permissions import IsAuthenticated
 from django.forms.models import model_to_dict
+from .models import UserInteraction
+from .services import BookRecommendationService, UserInteractionService
+
 
 class BookRecommendationAPIViews(ListCreateAPIView):
-    queryset = BookRecommendation.objects.all()
+    queryset = BookRecommendationService.get_all_books()
     serializer_class = BookRecommendationSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        
-        payload=decode_access_token(request.headers['Authorization'].split(' ')[1])
-        request.data['submitted_by']=payload['user_id']
+        user = get_user_from_token(request)
+        request.data['submitted_by'] = user.id
         serializer = BookRecommendationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -41,49 +41,40 @@ class BookRecommendationAPIViews(ListCreateAPIView):
         if publication_date:
             queryset = queryset.filter(publication_date=publication_date)
 
-        queryset = queryset.order_by(sort_by)
+        queryset = queryset.order_by(sort_by).prefetch_related('userinteraction_set')
 
         recommended_books = BookRecommendationSerializer(queryset, many=True).data
 
         for book in recommended_books:
-            book['total_likes'] = UserInteraction.objects.filter(book_id=book['id'], liked=True).count()
-            book['comments'] = UserInteraction.objects.filter(book_id=book['id'], comment__isnull=False).count()
-            book['comment_list'] = [interaction['comment'] for interaction in UserInteraction.objects.filter(book_id=book['id'], comment__isnull=False).values('comment')]
+            book_id = book['id']
+            interactions = UserInteractionService.filter_interaction_by_book_id_and_like(book_id,True).count()
+            book['total_likes'] = interactions.filter(liked=True).count()
+            book['comments'] = interactions.filter(comment__isnull=False).count()
+            book['comment_list'] = list(interactions.filter(comment__isnull=False).values_list('comment', flat=True))
 
         return Response(recommended_books, status=status.HTTP_200_OK)
     
 class BookRecommendationModifyAPIViews(RetrieveUpdateDestroyAPIView):
-    queryset = BookRecommendation.objects.all()
+    queryset = BookRecommendationService.get_all_books()
     serializer_class = BookRecommendationSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'id'
 
-    def put(self, request, *args, **kwargs):
-        return super().put(request, *args, **kwargs)
-    
-    def patch(self, request, *args, **kwargs):
-        return super().patch(request, *args, **kwargs)
-    
-    def delete(self, request, *args, **kwargs):
-        return super().delete(request, *args, **kwargs)
-    
-    
 class UserInteractionAPIViews(ListCreateAPIView):
     serializer_class = UserInteractionPostSerializer
-    queryset=UserInteraction.objects.all()
+    queryset = UserInteractionService.get_all_interactions()
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        payload = decode_access_token(request.headers['Authorization'].split(' ')[1])
-        user_id = payload['user_id']
-        request.data['user'] = Users.objects.get(id=user_id)
+        user = get_user_from_token(request)
+        request.data['user'] = user.id
 
         if 'book_id' not in request.data:
             return Response({'error': 'book_id is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         book_id = request.data['book_id']
 
-        existing_interaction = UserInteraction.objects.filter(book_id=book_id, user_id=user_id).first()
+        existing_interaction = UserInteractionService.filter_interaction_by_user_id_and_book_id(user.id,book_id).first()
 
         if existing_interaction:
             if existing_interaction.liked == request.data['liked']:
@@ -95,16 +86,14 @@ class UserInteractionAPIViews(ListCreateAPIView):
                 interaction_dict = model_to_dict(existing_interaction)
                 return Response(interaction_dict, status=status.HTTP_200_OK)
 
-        request.data['book'] = BookRecommendation.objects.get(id=book_id)
+        request.data['book'] = BookRecommendationService.get_book_by_id(book_id)
         interaction_instance = UserInteraction(**request.data)
         interaction_instance.save()
         interaction_dict = model_to_dict(interaction_instance)
         return Response(interaction_dict, status=status.HTTP_201_CREATED)
     
     def get(self, request, *args, **kwargs):
-        payload=decode_access_token(request.headers['Authorization'].split(' ')[1])
-        user_id=payload['user_id']
-        interactions=UserInteraction.objects.filter(user_id=user_id).values('book_id', 'liked', 'comment')
+        user = get_user_from_token(request)
+        interactions = UserInteractionService.filter_user_interactions_by_user_id(user.id).values('book_id', 'liked', 'comment')
         return Response(list(interactions), status=status.HTTP_200_OK)
-
 
